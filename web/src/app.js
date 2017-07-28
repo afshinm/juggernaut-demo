@@ -28,6 +28,9 @@ export default class App extends Component {
     this.getData().get(dataset => {
       this.setState({dataset});
     });
+
+    var worker = new Worker("./loader.js");
+
   }
 
   render() {

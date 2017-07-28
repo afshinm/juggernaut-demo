@@ -16,8 +16,16 @@ app.get('/', function(req, res) {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-app.get('/dataset/iris.csv', function(req, res) {
-  res.sendFile(path.join(__dirname, 'dataset/iris.csv'));
+app.get('/dataset/:file', function(req, res) {
+  res.sendFile(path.join(__dirname, 'dataset/' + req.params.file));
+});
+
+app.get('/loader.js', function(req, res) {
+  res.sendFile(path.join(__dirname, 'src/loader.js'));
+});
+
+app.get('/wasm/:file', function(req, res) {
+  res.sendFile(path.join(__dirname, 'src/wasm/' + req.params.file));
 });
 
 app.listen(3000, function(err) {

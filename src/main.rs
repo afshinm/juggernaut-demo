@@ -1,52 +1,108 @@
-extern crate libc;
+#![feature(link_args)]
+#[link_args = "-s BUILD_AS_WORKER=1"]
+
+#[macro_use]
+extern crate stdweb;
+
+#[macro_use]
+extern crate serde_derive;
 extern crate juggernaut;
+extern crate csv;
 
-mod externs;
-
+use std::fs::File;
+use std::path::PathBuf;
 use juggernaut::nl::NeuralLayer;
 use juggernaut::nn::NeuralNetwork;
 use juggernaut::activation::Activation;
 use juggernaut::activation::Sigmoid;
+use juggernaut::activation::HyperbolicTangent;
+use juggernaut::activation::SoftPlus;
+
 use juggernaut::sample::Sample;
 use juggernaut::matrix::MatrixTrait;
 
+#[derive(Debug,Deserialize)]
+enum FlowerClass {
+    setosa,
+    versicolor,
+    virginica
+}
+
+#[derive(Debug,Deserialize)]
+struct Flower {
+    sepal_length: f64,
+    sepal_width: f64,
+    petal_length: f64,
+    petal_width: f64,
+    class: FlowerClass,
+}
+
+fn get_flower_class(class: FlowerClass) -> Vec<f64> {
+    match class {
+        FlowerClass::setosa => vec![0f64, 0f64, 1f64],
+        FlowerClass::versicolor => vec![0f64, 1f64, 0f64],
+        FlowerClass::virginica => vec![1f64, 0f64, 0f64]
+    }
+}
+
+fn csv_to_dataset(data: String) -> Vec<Sample> {
+    let mut dataset = vec![];
+
+    let mut rdr = csv::Reader::from_reader(data.as_bytes());
+
+    for result in rdr.deserialize() {
+        let flower: Flower = result.expect("Unable to convert the result");
+
+        dataset.push(Sample::new(vec![flower.sepal_length, flower.sepal_width, flower.petal_length, flower.petal_width], get_flower_class(flower.class)))
+    }
+
+    dataset
+}
+
 fn main() {
+    stdweb::initialize();
+
     println!("Juggernaut...");
 
-    let dataset = vec![
-        Sample::new(vec![0f64, 0f64, 1f64], vec![0f64]),
-        Sample::new(vec![0f64, 1f64, 1f64], vec![0f64]),
-        Sample::new(vec![1f64, 0f64, 1f64], vec![1f64]),
-        Sample::new(vec![1f64, 1f64, 1f64], vec![1f64])
-    ];
+    let fetch_callback = |data: String| {
+        let dataset = csv_to_dataset(data);
 
-    println!("Creating the network...");
+        println!("Creating the network...");
 
-    let mut test = NeuralNetwork::new(dataset, Sigmoid::new());
+        let mut test = NeuralNetwork::new(dataset);
 
-    // 1st layer = 2 neurons - 3 inputs
-    test.add_layer(NeuralLayer::new(2, 3));
+        test.add_layer(NeuralLayer::new(7, 4, Sigmoid::new()));
 
-    println!("First layer created: 2 neurons 3 inputs");
+        test.add_layer(NeuralLayer::new(3, 7, Sigmoid::new()));
 
-    // 2nd layer = 1 neuron - 2 inputs
-    test.add_layer(NeuralLayer::new(1, 2));
+        println!("Training...");
 
-    println!("Second layer created: 1 neuron 2 inputs");
+        test.error(|err| {
+            println!("error({})", err);
+        });
 
-    println!("Training (60,000 epochs)...");
+        test.train(2000, 0.1f64);
 
-    test.error(|err| {
-        externs::eval(&format!("error({})", err.to_string()));
-    });
+        println!("Done!!");
 
-    test.train(10000);
+        let think = test.evaluate(Sample::predict(vec![5f64,3.4f64,1.5f64,0.2f64]));
 
-    println!("Done!!");
+        println!("Evaluate [1, 0, 1] = {:?}", think);
 
-    let think = test.evaluate(Sample::predict(vec![1f64, 0f64, 1f64]));
+        let think2 = test.evaluate(Sample::predict(vec![7.0f64,3.2f64,4.7f64,1.4f64]));
 
-    println!("Evaluate [1, 0, 1] = {:?}", think.get(0, 0));
+        println!("Evaluate [1, 0, 1] = {:?}", think2);
 
-    externs::eval(&format!("evaluate({})", think.get(0, 0).to_string()));
+        let think3 = test.evaluate(Sample::predict(vec![6.2f64,3.4f64,5.4f64,2.3f64]));
+
+        println!("Evaluate [1, 0, 1] = {:?}", think3);
+    };
+
+    js! {
+        var fetch_callback = @{fetch_callback};
+        fetch( "/dataset/iris.csv" ).then((res) => res.text()).then(fetch_callback);
+        fetch_callback.drop(); // Necessary to clean up the closure on Rust's side.
+    }
+
+    stdweb::event_loop();
 }
