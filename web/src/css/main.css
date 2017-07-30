@@ -2,3 +2,11 @@
     border: 1px solid #d2cfcf;
     border-radius: 2px;
 }
+
+.errors {
+    border: 1px solid #d2cfcf;
+    border-radius: 2px;
+    fill: none;
+    stroke: #ffab00;
+    stroke-width: 3;
+}

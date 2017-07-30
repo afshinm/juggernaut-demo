@@ -1,4 +1,6 @@
+#![recursion_limit = "128"]
 #![feature(link_args)]
+
 #[link_args = "-s BUILD_AS_WORKER=1"]
 
 #[macro_use]
@@ -37,6 +39,8 @@ struct Flower {
     class: FlowerClass,
 }
 
+struct NN;
+
 fn get_flower_class(class: FlowerClass) -> Vec<f64> {
     match class {
         FlowerClass::setosa => vec![0f64, 0f64, 1f64],
@@ -59,49 +63,67 @@ fn csv_to_dataset(data: String) -> Vec<Sample> {
     dataset
 }
 
+impl NN {
+    pub fn new() -> NN {
+        return NN {};
+    }
+
+    pub fn train(&self) {
+        println!("Juggernaut...");
+
+        let fetch_callback = |data: String| {
+            let dataset = csv_to_dataset(data);
+
+            println!("Creating the network...");
+
+            let mut test = NeuralNetwork::new(dataset);
+
+            test.add_layer(NeuralLayer::new(7, 4, Sigmoid::new()));
+
+            test.add_layer(NeuralLayer::new(3, 7, Sigmoid::new()));
+
+            println!("Training...");
+
+            test.error(|err| {
+                js!{
+                    postMessage("{ \"type\": \"error\", \"data\": " + @{err} + "}");
+                }
+            });
+
+            test.train(2000, 0.1f64);
+
+            println!("Done!!");
+
+            let think = test.evaluate(Sample::predict(vec![5f64,3.4f64,1.5f64,0.2f64]));
+
+            println!("Evaluate [1, 0, 1] = {:?}", think);
+        };
+
+        js! {
+            var fetch_callback = @{fetch_callback};
+            fetch( "/dataset/iris.csv" ).then((res) => res.text()).then(fetch_callback);
+            fetch_callback.drop(); // Necessary to clean up the closure on Rust's side.
+        }
+    }
+}
+
 fn main() {
     stdweb::initialize();
 
-    println!("Juggernaut...");
+    println!("Web worker initialized...");
 
-    let fetch_callback = |data: String| {
-        let dataset = csv_to_dataset(data);
-
-        println!("Creating the network...");
-
-        let mut test = NeuralNetwork::new(dataset);
-
-        test.add_layer(NeuralLayer::new(7, 4, Sigmoid::new()));
-
-        test.add_layer(NeuralLayer::new(3, 7, Sigmoid::new()));
-
-        println!("Training...");
-
-        test.error(|err| {
-            println!("error({})", err);
-        });
-
-        test.train(2000, 0.1f64);
-
-        println!("Done!!");
-
-        let think = test.evaluate(Sample::predict(vec![5f64,3.4f64,1.5f64,0.2f64]));
-
-        println!("Evaluate [1, 0, 1] = {:?}", think);
-
-        let think2 = test.evaluate(Sample::predict(vec![7.0f64,3.2f64,4.7f64,1.4f64]));
-
-        println!("Evaluate [1, 0, 1] = {:?}", think2);
-
-        let think3 = test.evaluate(Sample::predict(vec![6.2f64,3.4f64,5.4f64,2.3f64]));
-
-        println!("Evaluate [1, 0, 1] = {:?}", think3);
-    };
+    let mut nn = NN::new();
 
     js! {
-        var fetch_callback = @{fetch_callback};
-        fetch( "/dataset/iris.csv" ).then((res) => res.text()).then(fetch_callback);
-        fetch_callback.drop(); // Necessary to clean up the closure on Rust's side.
+        var train = @{move || nn.train()};
+
+        this.addEventListener("message", (e) => {
+            console.log("The main thread said something", e.data);
+
+            if (e.data.command === "train") {
+                train();
+            }
+        })
     }
 
     stdweb::event_loop();
