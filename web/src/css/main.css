@@ -10,3 +10,20 @@
     stroke: #ffab00;
     stroke-width: 3;
 }
+
+a.datasetSelect.active {
+  border: 1px solid #1EAEDB;
+  -webkit-box-shadow:inset 0px 0px 0px 1px #1EAEDB;
+  -moz-box-shadow:inset 0px 0px 0px 1px #1EAEDB;
+  box-shadow:inset 0px 0px 0px 1px #1EAEDB;
+}
+
+a.datasetSelect {
+  height: inherit;
+  line-height: normal;
+  padding: 5px;
+}
+
+.datasetSelect img {
+  width: 100px;
+}
