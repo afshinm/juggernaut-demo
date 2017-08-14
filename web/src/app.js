@@ -74,7 +74,12 @@ export default class App extends Component {
 
   train() {
     this.setState({errors: []});
-    this.worker.postMessage({"command":"train"});
+    this.worker.postMessage({
+      "command":"train", 
+      "datasetName": this.state.datasetName, 
+      "learningRate": 0.01, 
+      "epochs": 2100
+    });
   }
 
   render() {
