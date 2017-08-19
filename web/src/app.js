@@ -77,8 +77,8 @@ export default class App extends Component {
     this.worker.postMessage({
       "command":"train", 
       "datasetName": this.state.datasetName, 
-      "learningRate": 0.01, 
-      "epochs": 2100
+      "learningRate": 0.001, 
+      "epochs": 3000
     });
   }
 

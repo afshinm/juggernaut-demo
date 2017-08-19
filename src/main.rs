@@ -19,6 +19,7 @@ use juggernaut::activation::Activation;
 use juggernaut::activation::Sigmoid;
 use juggernaut::activation::HyperbolicTangent;
 use juggernaut::activation::SoftPlus;
+use juggernaut::activation::RectifiedLinearUnit;
 
 use juggernaut::sample::Sample;
 use juggernaut::matrix::MatrixTrait;
@@ -30,9 +31,7 @@ struct Point {
     Class: i16,
 }
 
-struct NN<T> where T: juggernaut::activation::Activation {
-    instance: Option<NeuralNetwork<T>>
-}
+struct NN;
 
 fn get_point_class(class: i16) -> Vec<f64> {
     match class {
@@ -57,11 +56,9 @@ fn csv_to_dataset(data: String) -> Vec<Sample> {
     dataset
 }
 
-impl<T> NN<T> where T: juggernaut::activation::Activation {
-    pub fn new() -> NN<T> {
-        return NN {
-            instance: None
-        };
+impl NN {
+    pub fn new() -> NN {
+        return NN;
     }
 
     pub fn train(&self, dataset_name: String, epochs: i32, learning_rate: f64) {
@@ -70,34 +67,33 @@ impl<T> NN<T> where T: juggernaut::activation::Activation {
         println!("Dataset: {}", dataset_name);
         println!("Juggernaut...");
 
-        let fetch_callback = |data: String, epochs: i32, learning_rate: f64| {
+        let fetch_callback = move |data: String, epochs: i32, learning_rate: f64| {
             let dataset = csv_to_dataset(data);
+
+            let mut neural_network = NeuralNetwork::new();
+
+
 
             println!("Creating the network...");
 
-            let mut test = NeuralNetwork::new(dataset);
-
-            test.add_layer(NeuralLayer::new(7, 2, HyperbolicTangent::new()));
-
-            test.add_layer(NeuralLayer::new(3, 7, HyperbolicTangent::new()));
+            neural_network.add_layer(NeuralLayer::new(7, 2, RectifiedLinearUnit::new()));
+            neural_network.add_layer(NeuralLayer::new(3, 7, RectifiedLinearUnit::new()));
 
             println!("Training...");
 
-            test.error(|err| {
+            neural_network.error(|err| {
                 js!{
                     postMessage("{ \"type\": \"error\", \"data\": " + @{err} + "}");
                 }
             });
 
-            test.train(epochs, learning_rate);
-
-            self.instance = Some(test);
+            neural_network.train(dataset, epochs, learning_rate);
 
             println!("Done!!");
 
-            let think = test.evaluate(Sample::predict(vec![5f64,3.4f64]));
+            //let think = test.evaluate(Sample::predict(vec![5f64,3.4f64]));
 
-            println!("Evaluate [1, 0, 1] = {:?}", think);
+            //println!("Evaluate [1, 0, 1] = {:?}", think);
         };
 
         js! {
@@ -117,7 +113,7 @@ fn main() {
 
     println!("Web worker initialized...");
 
-    let mut nn: NN<HyperbolicTangent> = NN::new();
+    let mut nn = NN::new();
 
     js! {
         var train = @{move |dataset_name: String, epochs: i32, learning_rate: f64| nn.train(dataset_name, epochs, learning_rate)};
