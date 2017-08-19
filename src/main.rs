@@ -2,7 +2,6 @@
 #![feature(link_args)]
 
 #[link_args = "-s BUILD_AS_WORKER=1"]
-
 #[macro_use]
 extern crate stdweb;
 
@@ -24,7 +23,7 @@ use juggernaut::activation::RectifiedLinearUnit;
 use juggernaut::sample::Sample;
 use juggernaut::matrix::MatrixTrait;
 
-#[derive(Debug,Deserialize)]
+#[derive(Debug, Deserialize)]
 struct Point {
     X: f64,
     Y: f64,
@@ -38,7 +37,7 @@ fn get_point_class(class: i16) -> Vec<f64> {
         0 => vec![0f64, 0f64, 1f64],
         1 => vec![0f64, 1f64, 0f64],
         2 => vec![1f64, 0f64, 0f64],
-        _ => vec![]
+        _ => vec![],
     }
 }
 
@@ -50,7 +49,10 @@ fn csv_to_dataset(data: String) -> Vec<Sample> {
     for result in rdr.deserialize() {
         let point: Point = result.expect("Unable to convert the result");
 
-        dataset.push(Sample::new(vec![point.X, point.Y], get_point_class(point.Class)))
+        dataset.push(Sample::new(
+            vec![point.X, point.Y],
+            get_point_class(point.Class),
+        ))
     }
 
     dataset
@@ -116,7 +118,11 @@ fn main() {
     let mut nn = NN::new();
 
     js! {
-        var train = @{move |dataset_name: String, epochs: i32, learning_rate: f64| nn.train(dataset_name, epochs, learning_rate)};
+        var train = @{
+            move |dataset_name: String, epochs: i32, learning_rate: f64| {
+                nn.train(dataset_name, epochs, learning_rate);
+            }
+        };
 
         this.addEventListener("message", (e) => {
             console.log("The main thread said something", e.data);
