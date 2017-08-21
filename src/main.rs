@@ -74,12 +74,12 @@ impl NN {
 
             let mut neural_network = NeuralNetwork::new();
 
-
-
             println!("Creating the network...");
 
-            neural_network.add_layer(NeuralLayer::new(7, 2, RectifiedLinearUnit::new()));
-            neural_network.add_layer(NeuralLayer::new(3, 7, RectifiedLinearUnit::new()));
+            neural_network.add_layer(NeuralLayer::new(4, 2, HyperbolicTangent::new()));
+            neural_network.add_layer(NeuralLayer::new(4, 4, HyperbolicTangent::new()));
+            neural_network.add_layer(NeuralLayer::new(4, 4, HyperbolicTangent::new()));
+            neural_network.add_layer(NeuralLayer::new(3, 4, HyperbolicTangent::new()));
 
             println!("Training...");
 
