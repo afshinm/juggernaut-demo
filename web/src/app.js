@@ -95,11 +95,11 @@ export default class App extends Component {
               It uses <a href="http://juggernaut.rs" target="_blank">Juggernaut</a> to train the model with Iris dataset and illustrates elements using <a href="http://d3js.org" target="_blank">D3</a>.
             </p>
 
-            <div className={kui.row}>
+            <div className={`${kui.row} ${styles.datasetWrapper}`}>
               <div className={`${kui.six} ${kui.columns}`}>
                 <svg className={styles.dataset} id='dataset'></svg>
               </div>
-              <div className={`${kui.two} ${kui.columns}`}>
+              <div className={`${styles.datasetContainer} ${kui.two} ${kui.columns}`}>
                 <a href="javascript:void(0);" className={`${kui.button} ${styles.datasetSelect} ${this.state.datasetName == '4' ? styles.active : null}`} onClick={this.setDataset.bind(this, '4')}>
                   <img src={dataset1} />
                 </a>
@@ -116,10 +116,12 @@ export default class App extends Component {
               <div className={`${kui.four} ${kui.columns}`}>
                 <p><b>{this.getDatasetDescription(this.state.datasetName)}</b></p>
                 <p>Dataset has {this.state.dataset.length} records.</p>
+
+                <a href="javascript:void(0);" className={kui.button} onClick={this.train.bind(this)}>Train</a>
               </div>
             </div>
 
-            <div className={kui.row}>
+            <div className={`${styles.networkContainer} ${kui.row}`}>
               <div className={`${kui.twelve} ${kui.columns}`}>
                 <svg className={styles.network} id='network'></svg>
               </div>
@@ -128,10 +130,9 @@ export default class App extends Component {
             <div className={kui.row}>
               <div className={`${kui.six} ${kui.columns}`}>
 
-            <svg className={styles.errors} id='errors'></svg>
-            <p>Error has {this.state.errors.length} records <b>({this.state.errors.length > 0 && this.state.errors[this.state.errors.length - 1].toFixed(6)})</b></p>
+                <svg className={styles.errors} id='errors'></svg>
+                <p>Error has {this.state.errors.length} records <b>({this.state.errors.length > 0 && this.state.errors[this.state.errors.length - 1].toFixed(6)})</b></p>
 
-            <a href="javascript:void(0);" className={kui.button} onClick={this.train.bind(this)}>Train</a>
 
               </div>
             </div>

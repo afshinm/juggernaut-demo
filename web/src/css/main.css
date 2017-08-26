@@ -1,3 +1,21 @@
+.datasetWrapper {
+  height: 303px;
+}
+.datasetContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: auto;
+  height: 100%;
+}
+.datasetContainer a:first-child {
+  margin-top: 0;
+}
+.datasetContainer a {
+  margin-top: 10px;
+  overflow: auto;
+  margin-bottom: 0;
+}
 .dataset {
     border: 1px solid #d2cfcf;
     border-radius: 2px;
@@ -26,4 +44,8 @@ a.datasetSelect {
 
 .datasetSelect img {
   width: 100px;
+}
+
+.networkContainer {
+  margin: 70px 0;
 }
