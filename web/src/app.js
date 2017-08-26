@@ -24,6 +24,8 @@ export default class App extends Component {
 
     this.renderErrors();
 
+    this.renderNetwork();
+
     var worker = new Worker("./loader.js");
     this.worker = worker;
 
@@ -116,7 +118,12 @@ export default class App extends Component {
                 <p>Dataset has {this.state.dataset.length} records.</p>
               </div>
             </div>
-            
+
+            <div className={kui.row}>
+              <div className={`${kui.twelve} ${kui.columns}`}>
+                <svg className={styles.network} id='network'></svg>
+              </div>
+            </div>
 
             <div className={kui.row}>
               <div className={`${kui.six} ${kui.columns}`}>
@@ -208,5 +215,93 @@ export default class App extends Component {
       .attr('fill', (d) => color(d.Class))
       .attr('cy', (d) => axisY(d[y]))
       .attr('cx', (d) => axisX(d[x]));
+  }
+
+  renderNetwork() {
+    const width = 960;
+    const height = 300;
+    const nodeSize = 20;
+    const graph = {
+      "nodes": [
+        {"label": "i0", "layer": 1},
+        {"label": "i1", "layer": 1},
+        {"label": "h0", "layer": 2},
+        {"label": "i2", "layer": 1},
+        {"label": "h1", "layer": 2},
+        {"label": "h2", "layer": 2},
+        {"label": "h3", "layer": 2},
+        {"label": "o0", "layer": 3},
+      ]
+    };
+
+    const color = d3.scaleOrdinal(d3.schemeCategory20c);
+
+    var svg = d3.select("#network")
+      .attr("width", width)
+      .attr("height", height);
+
+    var nodes = graph.nodes;
+
+    // get network size
+    var netsize = {};
+
+    nodes.forEach((d) => {
+      if (d.layer in netsize) {
+        netsize[d.layer] += 1;
+      } else {
+        netsize[d.layer] = 1;
+      }
+      d["lidx"] = netsize[d.layer];
+    });
+
+    // calc distances between nodes
+    var largestLayerSize = Math.max.apply(null, Object.keys(netsize).map(i => netsize[i]));
+
+    var xdist = width / Object.keys(netsize).length;
+    var ydist = height / largestLayerSize;
+
+    // create node locations
+    nodes.map((d, i) => {
+      d["x"] = (d.layer - 0.5) * xdist;
+      d["y"] = (d.lidx - 0.5) * (height / (netsize[d.layer]));
+    });
+
+    // autogenerate links
+    var links = [];
+    nodes.map((d, i) => {
+      for (var n in nodes) {
+        if (d.layer + 1 == nodes[n].layer) {
+          links.push({"source": parseInt(i), "target": parseInt(n), "value": 1}) }
+      }
+    }).filter((d) => typeof d !== "undefined");
+
+    // draw links
+    var link = svg.selectAll(".link")
+      .data(links)
+      .enter().append("line")
+
+      .attr("class", "link")
+      .attr("x1", (d) => nodes[d.source].x)
+      .attr("y1", (d) => nodes[d.source].y)
+      .attr("x2", (d) => nodes[d.target].x)
+      .attr("y2", (d) => nodes[d.target].y)
+      .style("stroke-width", (d) => Math.sqrt(d.value));
+
+    // draw nodes
+    var node = svg.selectAll(".node")
+      .data(nodes)
+      .enter().append("g")
+      .attr("transform", (d) => "translate(" + d.x + "," + d.y + ")");
+
+    var circle = node.append("circle")
+      .attr("class", "node")
+      .attr("r", nodeSize)
+      .style("fill", (d) => color(d.layer));
+
+
+    node.append("text")
+      .attr("dx", "-.35em")
+      .attr("dy", ".35em")
+      .text((d) => d.label);
   }
 }
