@@ -7,6 +7,7 @@ extern crate stdweb;
 
 #[macro_use]
 extern crate serde_derive;
+extern crate serde_json;
 extern crate juggernaut;
 extern crate csv;
 
@@ -22,11 +23,12 @@ use juggernaut::activation::RectifiedLinearUnit;
 
 use juggernaut::sample::Sample;
 use juggernaut::matrix::MatrixTrait;
+use juggernaut::matrix::Matrix;
 
 #[derive(Debug, Deserialize)]
 struct Point {
-    X: f64,
-    Y: f64,
+    X: f32,
+    Y: f32,
     Class: i16,
 }
 
@@ -41,7 +43,7 @@ fn get_point_class(class: i16) -> Vec<f64> {
     }
 }
 
-fn csv_to_dataset(data: String) -> Vec<Sample> {
+fn csv_to_dataset(data: String) -> (Vec<Sample>) {
     let mut dataset = vec![];
 
     let mut rdr = csv::Reader::from_reader(data.as_bytes());
@@ -50,7 +52,7 @@ fn csv_to_dataset(data: String) -> Vec<Sample> {
         let point: Point = result.expect("Unable to convert the result");
 
         dataset.push(Sample::new(
-            vec![point.X, point.Y],
+            vec![point.X as f64, point.Y as f64],
             get_point_class(point.Class),
         ))
     }
@@ -76,16 +78,43 @@ impl NN {
 
             println!("Creating the network...");
 
-            neural_network.add_layer(NeuralLayer::new(4, 2, HyperbolicTangent::new()));
-            neural_network.add_layer(NeuralLayer::new(4, 4, HyperbolicTangent::new()));
-            neural_network.add_layer(NeuralLayer::new(4, 4, HyperbolicTangent::new()));
-            neural_network.add_layer(NeuralLayer::new(3, 4, HyperbolicTangent::new()));
+            neural_network.add_layer(NeuralLayer::new(4, 2, Sigmoid::new()));
+            neural_network.add_layer(NeuralLayer::new(4, 4, Sigmoid::new()));
+            neural_network.add_layer(NeuralLayer::new(3, 4, Sigmoid::new()));
 
             println!("Training...");
 
-            neural_network.error(|err| {
+            neural_network.on_error(|err| {
                 js!{
                     postMessage("{ \"type\": \"error\", \"data\": " + @{err} + "}");
+                }
+            });
+
+            let sample_row = dataset[0].inputs.clone();
+
+            neural_network.on_epoch(move |nn| {
+                let sample_test = sample_row.clone();
+                
+                println!("predicting {:?}", &sample_test);
+
+                let eval = nn.forward(&vec![Sample::predict(sample_test)])
+                    .last()
+                    .unwrap()
+                    .row(0)
+                    .clone();
+
+                let encoded = serde_json::to_string(&eval).unwrap();
+
+                js! {
+                    postMessage("{ \"type\": \"epoch\", \"data\": " + @{encoded} + "}");
+                }
+
+                let layers_weight = nn.get_layers().iter().map(|n| n.weights.body()).collect::<Vec<_>>();
+
+                let layers_encoded = serde_json::to_string(&layers_weight).unwrap();
+
+                js! {
+                    postMessage("{ \"type\": \"layers\", \"data\": " + @{layers_encoded} + "}");
                 }
             });
 

@@ -67,6 +67,7 @@ export default class App extends Component {
     console.log("received the message!", data);
 
     if (data.type === 'error') this.storeError(data);
+    if (data.type === 'layers') this.updateNetwork(data.data);
   }
 
   storeError(data) {
@@ -79,8 +80,8 @@ export default class App extends Component {
     this.worker.postMessage({
       "command":"train", 
       "datasetName": this.state.datasetName, 
-      "learningRate": 0.001, 
-      "epochs": 3000
+      "learningRate": 0.01, 
+      "epochs": 1000
     });
   }
 
@@ -218,6 +219,21 @@ export default class App extends Component {
       .attr('cx', (d) => axisX(d[x]));
   }
 
+
+  flatten(d) {
+    return d.reduce((a, b) => Array.isArray(b) ? a.concat(this.flatten(b)) : a.concat(b), []);
+  }
+
+  updateNetwork(weights) {
+    var flatWeights = this.flatten(weights);
+    var svg = d3.select("#network");
+
+    var link = svg.selectAll(".link")
+      .style("stroke-width", (d, i) => {
+        return flatWeights[i] * 5;
+      }).exit();
+  }
+
   renderNetwork() {
     const width = 960;
     const height = 300;
@@ -226,12 +242,20 @@ export default class App extends Component {
       "nodes": [
         {"label": "i0", "layer": 1},
         {"label": "i1", "layer": 1},
+
         {"label": "h0", "layer": 2},
-        {"label": "i2", "layer": 1},
         {"label": "h1", "layer": 2},
         {"label": "h2", "layer": 2},
         {"label": "h3", "layer": 2},
-        {"label": "o0", "layer": 3},
+
+        {"label": "h0", "layer": 3},
+        {"label": "h1", "layer": 3},
+        {"label": "h2", "layer": 3},
+        {"label": "h3", "layer": 3},
+
+        {"label": "o0", "layer": 4},
+        {"label": "o1", "layer": 4},
+        {"label": "o2", "layer": 4},
       ]
     };
 
