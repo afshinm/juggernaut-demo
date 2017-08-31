@@ -22,7 +22,7 @@ export default class App extends Component {
     // default dataset
     this.setDataset('4');
 
-    this.renderErrors();
+    this.renderErrors(true);
 
     this.renderNetwork();
 
@@ -72,7 +72,7 @@ export default class App extends Component {
 
   storeError(data) {
     this.setState({ errors: [...this.state.errors, data.data] });
-    this.updateErrors();
+    this.renderErrors(false);
   }
 
   train() {
@@ -119,6 +119,8 @@ export default class App extends Component {
                 <p>Dataset has {this.state.dataset.length} records.</p>
 
                 <a href="javascript:void(0);" className={kui.button} onClick={this.train.bind(this)}>Train</a>
+
+                <svg className={styles.errors} id='errors'></svg>
               </div>
             </div>
 
@@ -130,11 +132,7 @@ export default class App extends Component {
 
             <div className={kui.row}>
               <div className={`${kui.six} ${kui.columns}`}>
-
-                <svg className={styles.errors} id='errors'></svg>
                 <p>Error has {this.state.errors.length} records <b>({this.state.errors.length > 0 && this.state.errors[this.state.errors.length - 1].toFixed(6)})</b></p>
-
-
               </div>
             </div>
           </div>
@@ -143,45 +141,34 @@ export default class App extends Component {
     );
   }
 
-  renderErrors() {
-    const outerHeight = 300;
-    const outerWidth = 500;
-    const padding = {
-      top: 30,
-      right: 30,
-      bottom: 30,
-      left: 30
-    };
+  renderErrors(initiate) {
+    const outerHeight = 120;
+    const outerWidth = 270;
+    const padding = 15;
 
-    let main = d3.select('svg#errors').attr('width', outerWidth).attr('height', outerHeight);
-    let dataG = main.append('g').attr("transform", `translate(${padding.top}, ${padding.left})`);
+    let main = d3.select('svg#errors');
 
-    this.errorsChart = dataG;
+    if (initiate) {
+      main.attr('width', outerWidth).attr('height', outerHeight);
+      var group = main.append('g').attr("transform", `translate(${padding}, ${padding})`);
 
-    dataG.append("svg:path");
-  }
-
-  updateErrors() {
-    const outerHeight = 300;
-    const outerWidth = 500;
-    const padding = {
-      top: 30,
-      right: 30,
-      bottom: 30,
-      left: 30
-    };
+      // empty line
+      group.append("svg:path");
+    } else {
+      var group = main.select('g');
+    }
 
     const data = this.state.errors;
 
-    let axisX = d3.scaleLinear().domain([0, data.length]).range([0, outerWidth - padding.left - padding.right]);
-    let axisY = d3.scaleLinear().domain(d3.extent(data).reverse()).range([0, outerHeight - padding.top - padding.bottom]);
+    let axisX = d3.scaleLinear().domain([0, data.length]).range([0, outerWidth - padding - padding]);
+    let axisY = d3.scaleLinear().domain(d3.extent(data).reverse()).range([0, outerHeight - padding - padding]);
 
     var line = d3.line()
       .x(function(d, i) { return axisX(i); }) // set the x values for the line generator
       .y(function(d) { return axisY(d); }) // set the y values for the line generator
       .curve(d3.curveMonotoneX) // apply smoothing to the line
 
-    this.errorsChart.selectAll("path").data([data]).attr("d", line);
+    group.selectAll("path").data([data]).attr("d", line);
   }
 
   renderDataset() {
