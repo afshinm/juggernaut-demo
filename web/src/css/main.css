@@ -20,6 +20,9 @@
     border: 1px solid #d2cfcf;
     border-radius: 2px;
 }
+.datasetName {
+  height: 60px;
+}
 
 .errors {
     border: 1px solid #d2cfcf;
@@ -48,4 +51,9 @@ a.datasetSelect {
 
 .networkContainer {
   margin: 70px 0;
+}
+
+.iterationHeader {
+  margin-bottom: 50px;
+  text-align: center;
 }

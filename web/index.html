@@ -4,9 +4,9 @@
     <title>Juggernaut Iris</title>
 
     <style>
-  #network text {
-    pointer-events: none;
-  }
+#network text {
+  pointer-events: none;
+}
 
   #network .node:hover {
     stroke: #999;
@@ -17,6 +17,18 @@
   #network .link {
     stroke: #999;
     stroke-opacity: .6;
+    stroke-dasharray: 10 2;
+  }
+
+  #network.active .link {
+    animation: dash 5s linear forwards;
+    animation-iteration-count:infinite;
+  }
+
+  @keyframes dash {
+    to {
+      stroke-dashoffset: -100;
+    }
   }
     </style>
   </head>

@@ -85,6 +85,14 @@ export default class App extends Component {
     });
   }
 
+  getHeader() {
+    if (this.state.errors.length) {
+      return <p>Iterations {this.state.errors.length} <b>(Error: {this.state.errors.length > 0 && this.state.errors[this.state.errors.length - 1].toFixed(6)})</b></p>;
+    } else {
+      return <p>Click on Train button to start.</p>;
+    }
+  }
+
   render() {
     return (
       <div className={kui.container}>
@@ -115,10 +123,9 @@ export default class App extends Component {
               </div>
 
               <div className={`${kui.four} ${kui.columns}`}>
-                <p><b>{this.getDatasetDescription(this.state.datasetName)}</b></p>
-                <p>Dataset has {this.state.dataset.length} records.</p>
+                <p className={styles.datasetName}><b>{this.getDatasetDescription(this.state.datasetName)}</b></p>
 
-                <a href="javascript:void(0);" className={kui.button} onClick={this.train.bind(this)}>Train</a>
+                <a href="javascript:void(0);" className={`${kui.button} ${kui.primary}`} onClick={this.train.bind(this)}>Train ({this.state.dataset.length} records)</a>
 
                 <svg className={styles.errors} id='errors'></svg>
               </div>
@@ -126,15 +133,34 @@ export default class App extends Component {
 
             <div className={`${styles.networkContainer} ${kui.row}`}>
               <div className={`${kui.twelve} ${kui.columns}`}>
-                <svg className={styles.network} id='network'></svg>
+
+                <h3 className={styles.iterationHeader}>
+                  {this.getHeader()}
+                </h3>
+
+                <svg className={`${styles.network} ${this.state.errors.length && 'active'}`} id='network'></svg>
               </div>
             </div>
 
-            <div className={kui.row}>
-              <div className={`${kui.six} ${kui.columns}`}>
-                <p>Error has {this.state.errors.length} records <b>({this.state.errors.length > 0 && this.state.errors[this.state.errors.length - 1].toFixed(6)})</b></p>
+            <div className={`${kui.row}`}>
+              <div className={`${kui.twelve} ${kui.columns}`}>
+                <h3>What is Juggernaut?</h3>
+                <p>
+                  Juggernaut is a Neural Network library.
+                </p>
+
+                <h3>Source code</h3>
+                <p>
+                  The source code of this page and Juggernaut is available on Github.
+                </p>
+
+                <h3>Creator</h3>
+                <p>
+                  Afshin Mehrabani, a software developer.
+                </p>
               </div>
             </div>
+            
           </div>
         </div>
       </div>
