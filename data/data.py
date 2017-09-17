@@ -29,6 +29,9 @@ X2, Y2 = make_classification(n_features=2, n_redundant=0, n_informative=2)
 
 save('3', format(X1, Y1))
 
+
+# these three hss been used on the demo page 
+
 X1, Y1 = make_classification(n_features=2, n_redundant=0, n_informative=2,
                              n_clusters_per_class=1, n_classes=3)
 

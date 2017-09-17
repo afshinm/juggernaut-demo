@@ -26,6 +26,8 @@ export default class App extends Component {
 
     this.renderNetwork();
 
+    this.renderDataset();
+
     var worker = new Worker("./loader.js");
     this.worker = worker;
 
@@ -51,7 +53,8 @@ export default class App extends Component {
         dataset,
         datasetName
       });
-      this.renderDataset();
+
+      this.updateDataset();
     });
   }
 
@@ -64,10 +67,11 @@ export default class App extends Component {
   }
 
   dispatchMessage(data) {
-    console.log("received the message!", data);
+    //console.log("received the message!", data);
 
     if (data.type === 'error') this.storeError(data);
     if (data.type === 'layers') this.updateNetwork(data.data);
+    if (data.type === 'datasetEval') this.renderCanvas(data.data);
   }
 
   storeError(data) {
@@ -80,8 +84,8 @@ export default class App extends Component {
     this.worker.postMessage({
       "command":"train", 
       "datasetName": this.state.datasetName, 
-      "learningRate": 0.01, 
-      "epochs": 1000
+      "learningRate": 0.001, 
+      "epochs": 100
     });
   }
 
@@ -107,6 +111,8 @@ export default class App extends Component {
             <div className={`${kui.row} ${styles.datasetWrapper}`}>
               <div className={`${kui.six} ${kui.columns}`}>
                 <svg className={styles.dataset} id='dataset'></svg>
+
+                <canvas id="datasetEvaluate" width="450" height="450"></canvas>
               </div>
               <div className={`${styles.datasetContainer} ${kui.two} ${kui.columns}`}>
                 <a href="javascript:void(0);" className={`${kui.button} ${styles.datasetSelect} ${this.state.datasetName == '4' ? styles.active : null}`} onClick={this.setDataset.bind(this, '4')}>
@@ -197,31 +203,71 @@ export default class App extends Component {
     group.selectAll("path").data([data]).attr("d", line);
   }
 
+  renderCanvas(data) {
+    var canvas = document.querySelector("canvas#datasetEvaluate");
+    var canvasWidth = canvas.width;
+    var canvasHeight = canvas.height;
+    var ctx = canvas.getContext("2d");
+    var canvasData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
+
+    // That's how you define the value of a pixel //
+    let i = 0;
+    let j = 0;
+
+    let rect = 15;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    for (let y = 0; y < data.length; ++y) {
+      let [d, conf] = data[y][0];
+
+      if (i * rect > canvasWidth) {
+        ++j;
+        i = 0;
+      }
+
+      if (d === 0) {
+        ctx.fillStyle = 'rgba(0, 255, 0, ' + conf + ')';
+      }
+
+      if (d === 1) {
+        ctx.fillStyle = 'rgba(255, 0, 0, ' + conf + ')';
+      }
+
+      if (d === 2) {
+        ctx.fillStyle = 'rgba(0, 0, 255, '+ conf + ')';
+      }
+
+      ctx.fillRect(i * rect, j * rect, rect - 1, rect - 1);
+      ++i;
+    }
+  }
+
   renderDataset() {
     const outerHeight = 300;
     const outerWidth = 450;
-    const padding = {
-      top: 30,
-      right: 30,
-      bottom: 30,
-      left: 30
-    };
+    const padding = 30;
 
-    const data = this.state.dataset;
+    let main = d3.select('svg#dataset').attr('width', outerWidth).attr('height', outerHeight);
+    main.append('g').attr("transform", `translate(${padding}, ${padding})`);
+  }
+
+  updateDataset() {
+    const padding = 30;
+    const outerHeight = 300;
+    const outerWidth = 450;
+
     const x = 'X';
     const y = 'Y';
 
-    d3.select('svg#dataset').selectAll('*').remove();
+    const data = this.state.dataset;
 
-    let main = d3.select('svg#dataset').attr('width', outerWidth).attr('height', outerHeight);
-    let dataG = main.append('g').attr("transform", `translate(${padding.top}, ${padding.left})`);
-
-    let axisX = d3.scaleLinear().domain(d3.extent(data, (d) => d[x])).range([0, outerWidth - padding.left - padding.right]);
-    let axisY = d3.scaleLinear().domain(d3.extent(data, (d) => d[y])).range([0, outerHeight - padding.top - padding.bottom]);
+    let dataG = d3.select('svg#dataset').select('g');
+    let axisX = d3.scaleLinear().domain(d3.extent(data, (d) => d[x])).range([0, outerWidth - padding - padding]);
+    let axisY = d3.scaleLinear().domain(d3.extent(data, (d) => d[y])).range([0, outerHeight - padding - padding]);
     var color = d3.scaleOrdinal(d3.schemeCategory10);
 
-    let circles = dataG.selectAll('circle').remove().data(data)
-      .enter().append('circle').attr('r', 5).exit().remove();
+    let circles = dataG.selectAll('circle').data(data).enter().append('circle').attr('r', 5).exit();
 
     dataG.selectAll('circle')
       .transition()
@@ -231,7 +277,6 @@ export default class App extends Component {
       .attr('cy', (d) => axisY(d[y]))
       .attr('cx', (d) => axisX(d[x]));
   }
-
 
   flatten(d) {
     return d.reduce((a, b) => Array.isArray(b) ? a.concat(this.flatten(b)) : a.concat(b), []);
@@ -243,7 +288,7 @@ export default class App extends Component {
 
     var link = svg.selectAll(".link")
       .style("stroke-width", (d, i) => {
-        return flatWeights[i] * 5;
+        return Math.min(flatWeights[i] * 5, 20);
       }).exit();
   }
 

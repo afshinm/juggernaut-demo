@@ -1,5 +1,5 @@
-var wasm_file = "./wasm/juggernaut_iris-aa63c519a5f8fb60.wasm"; // wasm file
-var wjs_file = "./wasm/juggernaut_iris-aa63c519a5f8fb60.js"; // w.js file that links the wasm file
+var wasm_file = "./wasm/juggernaut_iris-246bdd79cfa36a21.wasm"; // wasm file
+var wjs_file = "./wasm/juggernaut_iris-246bdd79cfa36a21.js"; // w.js file that links the wasm file
 
 Module = {}
 console.log("Loading webassembly version");

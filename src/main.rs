@@ -10,6 +10,7 @@ extern crate serde_derive;
 extern crate serde_json;
 extern crate juggernaut;
 extern crate csv;
+extern crate itertools;
 
 use std::fs::File;
 use std::path::PathBuf;
@@ -20,10 +21,13 @@ use juggernaut::activation::Sigmoid;
 use juggernaut::activation::HyperbolicTangent;
 use juggernaut::activation::SoftPlus;
 use juggernaut::activation::RectifiedLinearUnit;
+use juggernaut::cost::cross_entropy::CrossEntropy;
 
 use juggernaut::sample::Sample;
 use juggernaut::matrix::MatrixTrait;
 use juggernaut::matrix::Matrix;
+
+use itertools::iterate;
 
 #[derive(Debug, Deserialize)]
 struct Point {
@@ -36,8 +40,11 @@ struct NN;
 
 fn get_point_class(class: i16) -> Vec<f64> {
     match class {
+        // blue
         0 => vec![0f64, 0f64, 1f64],
+        // orange
         1 => vec![0f64, 1f64, 0f64],
+        // green
         2 => vec![1f64, 0f64, 0f64],
         _ => vec![],
     }
@@ -60,6 +67,21 @@ fn csv_to_dataset(data: String) -> (Vec<Sample>) {
     dataset
 }
 
+fn generate_test_series() -> Vec<Sample> {
+    let mut samples = vec![];
+    let max: f32 = 2f32;
+    let min: f32 = -2f32;
+    let step: f32 = 0.15f32;
+
+    for n in iterate(min, |n| n + step).take_while(|&n| n <= max) {
+        for m in iterate(min, |m| m + step).take_while(|&m| m <= max) {
+            samples.push(Sample::predict(vec![m as f64, n as f64]))
+        }
+    }
+
+    samples
+}
+
 impl NN {
     pub fn new() -> NN {
         return NN;
@@ -78,9 +100,11 @@ impl NN {
 
             println!("Creating the network...");
 
-            neural_network.add_layer(NeuralLayer::new(4, 2, Sigmoid::new()));
-            neural_network.add_layer(NeuralLayer::new(4, 4, Sigmoid::new()));
-            neural_network.add_layer(NeuralLayer::new(3, 4, Sigmoid::new()));
+            neural_network.add_layer(NeuralLayer::new(4, 2, RectifiedLinearUnit::new()));
+            neural_network.add_layer(NeuralLayer::new(4, 4, RectifiedLinearUnit::new()));
+            neural_network.add_layer(NeuralLayer::new(3, 4, RectifiedLinearUnit::new()));
+
+            neural_network.set_cost_function(CrossEntropy);
 
             println!("Training...");
 
@@ -90,32 +114,71 @@ impl NN {
                 }
             });
 
-            let sample_row = dataset[0].inputs.clone();
+            //let sample_row = dataset[0].inputs.clone();
+
+            let dataset_eval = generate_test_series();
 
             neural_network.on_epoch(move |nn| {
-                let sample_test = sample_row.clone();
-                
-                println!("predicting {:?}", &sample_test);
+                //let sample_test = sample_row.clone();
 
+                //println!("predicting {:?}", &sample_test);
+
+                /*
                 let eval = nn.forward(&vec![Sample::predict(sample_test)])
                     .last()
                     .unwrap()
                     .row(0)
                     .clone();
 
-                let encoded = serde_json::to_string(&eval).unwrap();
+                let sample_encoded = serde_json::to_string(&eval).unwrap();
 
                 js! {
-                    postMessage("{ \"type\": \"epoch\", \"data\": " + @{encoded} + "}");
+                    postMessage("{ \"type\": \"epoch\", \"data\": " + @{sample_encoded} + "}");
                 }
+                */
 
-                let layers_weight = nn.get_layers().iter().map(|n| n.weights.body()).collect::<Vec<_>>();
+                let layers_weight = nn.get_layers()
+                    .iter()
+                    .map(|n| n.weights().body())
+                    .collect::<Vec<_>>();
+
+
+                println!("weight {:?}", layers_weight);
 
                 let layers_encoded = serde_json::to_string(&layers_weight).unwrap();
 
                 js! {
                     postMessage("{ \"type\": \"layers\", \"data\": " + @{layers_encoded} + "}");
                 }
+
+                // TODO (afshinm): evaluate of Juggernaut should be able to accept a vec
+                //
+                /*
+                let evaluated_dataset = dataset_eval.iter().map(|dataset_item|  {
+                    nn
+                        .forward(&dataset_item)
+                        .iter()
+                        .cloned()
+                        .last()
+                        .unwrap()
+                        .body()
+                        .iter()
+                        .cloned()
+                        .map(|n| {
+                            n.iter().cloned()
+                                .enumerate()
+                                .max_by(|&(i, x), &(j, y)| x.partial_cmp(&y).unwrap())
+                                .unwrap()
+                        })
+                        .collect::<Vec<_>>()
+                }).collect::<Vec<_>>();
+
+                let encoded = serde_json::to_string(&evaluated_dataset).unwrap();
+
+                js! {
+                    postMessage("{ \"type\": \"datasetEval\", \"data\": " + @{encoded} + "}");
+                }
+                */
             });
 
             neural_network.train(dataset, epochs, learning_rate);
