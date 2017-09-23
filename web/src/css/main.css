@@ -57,3 +57,12 @@ a.datasetSelect {
   margin-bottom: 50px;
   text-align: center;
 }
+.fullWidth {
+  width: 100%;
+}
+.noMargin {
+  margin: 0;
+}
+.trainForm label {
+  font-size: 1.2rem;
+}

@@ -13,6 +13,8 @@ export default class App extends Component {
 
     this.state = {
       datasetName: null,
+      epochs: 5000,
+      learningRate: 0.001,
       dataset: [],
       errors: []
     };
@@ -84,8 +86,8 @@ export default class App extends Component {
     this.worker.postMessage({
       "command":"train", 
       "datasetName": this.state.datasetName, 
-      "learningRate": 0.001, 
-      "epochs": 100
+      "learningRate": parseFloat(this.state.learningRate), 
+      "epochs": parseInt(this.state.epochs, 10)
     });
   }
 
@@ -95,6 +97,12 @@ export default class App extends Component {
     } else {
       return <p>Click on Train button to start.</p>;
     }
+  }
+
+  updateState(e) {
+    const obj = {};
+    obj[e.target.id] = e.target.value;
+    this.setState(obj);
   }
 
   render() {
@@ -130,6 +138,19 @@ export default class App extends Component {
 
               <div className={`${kui.four} ${kui.columns}`}>
                 <p className={styles.datasetName}><b>{this.getDatasetDescription(this.state.datasetName)}</b></p>
+
+                <form className={`${styles.noMargin} ${styles.trainForm}`}>
+                  <div className={`${kui.row}`}>
+                    <div className={`${kui.columns} ${kui.six}`}>
+                      <label>Learning rate</label>
+                      <input id="learningRate" className={`${styles.fullWidth}`} type="number" step="0.001" max="0.99" placeholder="Enter a number" value={this.state.learningRate} onChange={this.updateState.bind(this)} />
+                    </div>
+                    <div className={`${kui.columns} ${kui.six}`}>
+                      <label>Epochs</label>
+                      <input id="epochs" className={`${styles.fullWidth}`} type="number" min="1" max="100000" placeholder="Enter a number" value={this.state.epochs} onChange={this.updateState.bind(this)} />
+                    </div>
+                  </div>
+                </form>
 
                 <a href="javascript:void(0);" className={`${kui.button} ${kui.primary}`} onClick={this.train.bind(this)}>Train ({this.state.dataset.length} records)</a>
 
