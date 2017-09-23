@@ -66,3 +66,7 @@ a.datasetSelect {
 .trainForm label {
   font-size: 1.2rem;
 }
+
+a > i, button > i {
+  margin-right: 8px;
+}

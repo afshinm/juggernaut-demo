@@ -3,6 +3,7 @@ var wjs_file = "./wasm/juggernaut_iris-246bdd79cfa36a21.js"; // w.js file that l
 
 Module = {}
 console.log("Loading webassembly version");
+
 /// fetch wasm file and inject the js file
 fetch(wasm_file)
   .then(response => response.arrayBuffer())

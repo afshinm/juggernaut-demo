@@ -12,9 +12,13 @@ export default class App extends Component {
     super(props);
 
     this.state = {
+      training: false,
+      // is web worker ready?
+      ready: false,
       datasetName: null,
       epochs: 5000,
       learningRate: 0.001,
+      // dataset records
       dataset: [],
       errors: []
     };
@@ -30,9 +34,16 @@ export default class App extends Component {
 
     this.renderDataset();
 
-    var worker = new Worker("./loader.js");
-    this.worker = worker;
+    this.initWorker();
+  }
 
+  initWorker() {
+    this.setState({
+      ready: false
+    });
+
+    var worker = new Worker(`./loader.js`);
+    this.worker = worker;
     worker.onmessage = (message) => this.dispatchMessage(JSON.parse(message.data));
   }
 
@@ -69,8 +80,7 @@ export default class App extends Component {
   }
 
   dispatchMessage(data) {
-    //console.log("received the message!", data);
-
+    if (data.type === 'ready') this.setState({ ready: data.data });
     if (data.type === 'error') this.storeError(data);
     if (data.type === 'layers') this.updateNetwork(data.data);
     if (data.type === 'datasetEval') this.renderCanvas(data.data);
@@ -82,7 +92,25 @@ export default class App extends Component {
   }
 
   train() {
-    this.setState({errors: []});
+    if (this.state.training) {
+      alert("Cannot start two training sessions, yet!");
+      return false;
+    }
+
+    if (!this.state.ready) {
+      alert("Loading assets, please wait...");
+      return false;
+    }
+
+    this.clearCanvas();
+
+    this.clearNetwork();
+
+    this.setState({
+      errors: [],
+      training: true,
+    });
+
     this.worker.postMessage({
       "command":"train", 
       "datasetName": this.state.datasetName, 
@@ -91,11 +119,23 @@ export default class App extends Component {
     });
   }
 
+  stopTraining() {
+    this.setState({
+      training: false,
+      ready: false
+    });
+
+    this.worker.terminate();
+    this.initWorker();
+  }
+
   getHeader() {
     if (this.state.errors.length) {
       return <p>Iterations {this.state.errors.length} <b>(Error: {this.state.errors.length > 0 && this.state.errors[this.state.errors.length - 1].toFixed(6)})</b></p>;
-    } else {
+    } else if (this.state.ready) {
       return <p>Click on Train button to start.</p>;
+    } else {
+      return <p>Loading assets...</p>;
     }
   }
 
@@ -152,7 +192,22 @@ export default class App extends Component {
                   </div>
                 </form>
 
-                <a href="javascript:void(0);" className={`${kui.button} ${kui.primary}`} onClick={this.train.bind(this)}>Train ({this.state.dataset.length} records)</a>
+                {!this.state.training ?
+                <button className={`${kui.button} ${this.state.ready ? kui.primary : ""}`} onClick={this.train.bind(this)} disabled={!this.state.ready}>
+                  <i className={`fa ${this.state.ready ? "fa-play" : "fa-spin fa-spinner"}`} aria-hidden="true"></i>
+
+                  {this.state.ready ? 
+                  `Train (${this.state.dataset.length} records)`
+                      :
+                      `Loading...`
+                  }
+                </button>
+                    :
+                <button className={`${kui.button}`} onClick={this.stopTraining.bind(this)}>
+                  <i className={`fa fa-stop`} aria-hidden="true"></i>
+                  Stop training
+                </button>
+                }
 
                 <svg className={styles.errors} id='errors'></svg>
               </div>
@@ -195,8 +250,8 @@ export default class App extends Component {
   }
 
   renderErrors(initiate) {
-    const outerHeight = 120;
-    const outerWidth = 270;
+    const outerHeight = 90;
+    const outerWidth = 291;
     const padding = 15;
 
     let main = d3.select('svg#errors');
@@ -222,6 +277,12 @@ export default class App extends Component {
       .curve(d3.curveMonotoneX) // apply smoothing to the line
 
     group.selectAll("path").data([data]).attr("d", line);
+  }
+
+  clearCanvas() {
+    var canvas = document.querySelector("canvas#datasetEvaluate");
+    var ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
   }
 
   renderCanvas(data) {
@@ -311,6 +372,13 @@ export default class App extends Component {
       .style("stroke-width", (d, i) => {
         return Math.min(flatWeights[i] * 5, 20);
       }).exit();
+  }
+
+  clearNetwork() {
+    d3.select("#network")
+      .selectAll("line.link")
+      .style("stroke-width", 1)
+      .exit();
   }
 
   renderNetwork() {
