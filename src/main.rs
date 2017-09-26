@@ -18,6 +18,7 @@ use juggernaut::nl::NeuralLayer;
 use juggernaut::nn::NeuralNetwork;
 use juggernaut::activation::Activation;
 use juggernaut::activation::Sigmoid;
+use juggernaut::activation::SoftMax;
 use juggernaut::activation::HyperbolicTangent;
 use juggernaut::activation::SoftPlus;
 use juggernaut::activation::RectifiedLinearUnit;
@@ -40,11 +41,11 @@ struct NN;
 
 fn get_point_class(class: i16) -> Vec<f64> {
     match class {
-        // blue
+        // green
         0 => vec![0f64, 0f64, 1f64],
         // orange
         1 => vec![0f64, 1f64, 0f64],
-        // green
+        // blue
         2 => vec![1f64, 0f64, 0f64],
         _ => vec![],
     }
@@ -69,12 +70,16 @@ fn csv_to_dataset(data: String) -> (Vec<Sample>) {
 
 fn generate_test_series() -> Vec<Sample> {
     let mut samples = vec![];
-    let max: f32 = 2f32;
-    let min: f32 = -2f32;
-    let step: f32 = 0.15f32;
+    let x_max: f32 = 2f32;
+    let x_min: f32 = -2f32;
+    let x_step: f32 = 0.133333f32;
 
-    for n in iterate(min, |n| n + step).take_while(|&n| n <= max) {
-        for m in iterate(min, |m| m + step).take_while(|&m| m <= max) {
+    let y_max: f32 = 2f32;
+    let y_min: f32 = -2f32;
+    let y_step: f32 = 0.2f32;
+
+    for n in iterate(y_min, |i| i + y_step).take_while(|&i| i <= y_max) {
+        for m in iterate(x_min, |j| j + x_step).take_while(|&j| j <= x_max) {
             samples.push(Sample::predict(vec![m as f64, n as f64]))
         }
     }
@@ -100,9 +105,9 @@ impl NN {
 
             println!("Creating the network...");
 
-            neural_network.add_layer(NeuralLayer::new(4, 2, RectifiedLinearUnit::new()));
+            neural_network.add_layer(NeuralLayer::new(4, 2, HyperbolicTangent::new()));
             neural_network.add_layer(NeuralLayer::new(4, 4, RectifiedLinearUnit::new()));
-            neural_network.add_layer(NeuralLayer::new(3, 4, RectifiedLinearUnit::new()));
+            neural_network.add_layer(NeuralLayer::new(3, 4, SoftMax::new()));
 
             neural_network.set_cost_function(CrossEntropy);
 
@@ -142,9 +147,6 @@ impl NN {
                     .map(|n| n.weights().body())
                     .collect::<Vec<_>>();
 
-
-                println!("weight {:?}", layers_weight);
-
                 let layers_encoded = serde_json::to_string(&layers_weight).unwrap();
 
                 js! {
@@ -153,14 +155,9 @@ impl NN {
 
                 // TODO (afshinm): evaluate of Juggernaut should be able to accept a vec
                 //
-                /*
                 let evaluated_dataset = dataset_eval.iter().map(|dataset_item|  {
                     nn
-                        .forward(&dataset_item)
-                        .iter()
-                        .cloned()
-                        .last()
-                        .unwrap()
+                        .evaluate(dataset_item)
                         .body()
                         .iter()
                         .cloned()
@@ -178,7 +175,6 @@ impl NN {
                 js! {
                     postMessage("{ \"type\": \"datasetEval\", \"data\": " + @{encoded} + "}");
                 }
-                */
             });
 
             neural_network.train(dataset, epochs, learning_rate);
@@ -210,6 +206,9 @@ fn main() {
     let mut nn = NN::new();
 
     js! {
+        // to send the ready signal to client
+        postMessage("{ \"type\": \"ready\", \"data\": true }");
+
         var train = @{
             move |dataset_name: String, epochs: i32, learning_rate: f64| {
                 nn.train(dataset_name, epochs, learning_rate);
@@ -217,8 +216,6 @@ fn main() {
         };
 
         this.addEventListener("message", (e) => {
-            console.log("The main thread said something", e.data);
-
             if (e.data.command === "train") {
                 train(e.data.datasetName, e.data.epochs, e.data.learningRate);
             }

@@ -1,5 +1,16 @@
 .datasetWrapper {
   height: 303px;
+  position: relative;
+}
+.datasetWrapper canvas {
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  z-index: 1;
+}
+.datasetWrapper svg {
+  position: relative;
+  z-index: 5;
 }
 .datasetContainer {
   display: flex;

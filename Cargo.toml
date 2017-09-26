@@ -6,7 +6,7 @@ authors = ["Afshin Mehrabani <afshin.meh@gmail.com>"]
 [dependencies]
 stdweb = "0.1.1"
 libc = "0.2.26"
-juggernaut = { git = "https://github.com/afshinm/juggernaut", branch="afshinm-bias-node" }
+juggernaut = { path = "../juggernaut" }
 serde = "1.0.10"
 csv = "1.0.0-beta.4"
 serde_derive = "1.0.10"

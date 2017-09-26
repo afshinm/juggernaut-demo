@@ -75,6 +75,7 @@ export default class App extends Component {
     return d3.csv(datasetPath).row(d => {
       d.X = +d.X;
       d.Y = +d.Y;
+      d.Class = +d.Class;
       return d;
     });
   }
@@ -160,7 +161,7 @@ export default class App extends Component {
               <div className={`${kui.six} ${kui.columns}`}>
                 <svg className={styles.dataset} id='dataset'></svg>
 
-                <canvas id="datasetEvaluate" width="450" height="450"></canvas>
+                <canvas id="datasetEvaluate" width="450" height="300"></canvas>
               </div>
               <div className={`${styles.datasetContainer} ${kui.two} ${kui.columns}`}>
                 <a href="javascript:void(0);" className={`${kui.button} ${styles.datasetSelect} ${this.state.datasetName == '4' ? styles.active : null}`} onClick={this.setDataset.bind(this, '4')}>
@@ -308,19 +309,19 @@ export default class App extends Component {
         i = 0;
       }
 
-      if (d === 0) {
-        ctx.fillStyle = 'rgba(0, 255, 0, ' + conf + ')';
+      if (d === 1) {
+        ctx.fillStyle = 'rgba(44, 160, 44, ' + conf + ')';
       }
 
-      if (d === 1) {
-        ctx.fillStyle = 'rgba(255, 0, 0, ' + conf + ')';
+      if (d === 0) {
+        ctx.fillStyle = 'rgba(255, 127, 14, ' + conf + ')';
       }
 
       if (d === 2) {
-        ctx.fillStyle = 'rgba(0, 0, 255, '+ conf + ')';
+        ctx.fillStyle = 'rgba(31, 119, 180, '+ conf + ')';
       }
 
-      ctx.fillRect(i * rect, j * rect, rect - 1, rect - 1);
+      ctx.fillRect(i * rect, j * rect, rect, rect);
       ++i;
     }
   }
@@ -347,16 +348,21 @@ export default class App extends Component {
     let dataG = d3.select('svg#dataset').select('g');
     let axisX = d3.scaleLinear().domain(d3.extent(data, (d) => d[x])).range([0, outerWidth - padding - padding]);
     let axisY = d3.scaleLinear().domain(d3.extent(data, (d) => d[y])).range([0, outerHeight - padding - padding]);
-    var color = d3.scaleOrdinal(d3.schemeCategory10);
+    var color = d3.scaleOrdinal(d3.schemeCategory10).domain(d3.extent(data, (d) => d.Class));
 
     let circles = dataG.selectAll('circle').data(data).enter().append('circle').attr('r', 5).exit();
 
-    dataG.selectAll('circle')
+    dataG
+      .selectAll('circle')
+      .data(data)
       .transition()
       .delay(300)
       .duration(500)
+      .style('stroke-width', "1")
+      .style('stroke', "#fff")
       .attr('fill', (d) => color(d.Class))
       .attr('cy', (d) => axisY(d[y]))
+      .attr('id', (d) => d.Class)
       .attr('cx', (d) => axisX(d[x]));
   }
 
