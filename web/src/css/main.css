@@ -58,6 +58,8 @@ a.datasetSelect {
 
 .datasetSelect img {
   width: 100px;
+  height: 65px;
+  margin-top: 10px;
 }
 
 .networkContainer {
@@ -80,4 +82,10 @@ a.datasetSelect {
 
 a > i, button > i {
   margin-right: 8px;
+}
+.iconSet {
+  padding-left: 10px;
+}
+.description {
+  margin-bottom: 50px;
 }

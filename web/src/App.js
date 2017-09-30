@@ -61,6 +61,11 @@ export default class App extends Component {
   }
 
   setDataset(datasetName) {
+    if (this.state.training) {
+      if (!confirm("Do you want to stop the training session?")) return false;
+      this.stopTraining();
+    }
+
     this.getDataset(`./dataset/${datasetName}.csv`).get(dataset => {
       this.setState({
         dataset,
@@ -153,8 +158,8 @@ export default class App extends Component {
           <div className={`${kui.column} ${kui.animated} ${kui.fadeIn}`} style={{marginTop: '10%'}}>
             <h2>Juggernaut</h2>
 
-            <p>This page trains a model on your web browser using Emscripten and visualises all the steps and data points of the training process.
-              It uses <a href="http://juggernaut.rs" target="_blank">Juggernaut</a> to train the model with Iris dataset and illustrates elements using <a href="http://d3js.org" target="_blank">D3</a>.
+            <p>This page trains a model on your web browser using WebAssembly and visualises all the steps and data points of the training process.
+              It uses <a href="http://juggernaut.rs" target="_blank">Juggernaut</a> to train the model and illustrates elements using <a href="http://d3js.org" target="_blank">D3</a>. Select a dataset and click on "Train" button to start.
             </p>
 
             <div className={`${kui.row} ${styles.datasetWrapper}`}>
@@ -164,15 +169,15 @@ export default class App extends Component {
                 <canvas id="datasetEvaluate" width="450" height="300"></canvas>
               </div>
               <div className={`${styles.datasetContainer} ${kui.two} ${kui.columns}`}>
-                <a href="javascript:void(0);" className={`${kui.button} ${styles.datasetSelect} ${this.state.datasetName == '4' ? styles.active : null}`} onClick={this.setDataset.bind(this, '4')}>
+                <a title={this.getDatasetDescription('4')} href="javascript:void(0);" className={`${kui.button} ${styles.datasetSelect} ${this.state.datasetName == '4' ? styles.active : null}`} onClick={this.setDataset.bind(this, '4')}>
                   <img src={dataset1} />
                 </a>
 
-                <a href="javascript:void(0);" className={`${kui.button} ${styles.datasetSelect} ${this.state.datasetName == '5' ? styles.active : null}`} onClick={this.setDataset.bind(this, '5')}>
+                <a title={this.getDatasetDescription('5')} href="javascript:void(0);" className={`${kui.button} ${styles.datasetSelect} ${this.state.datasetName == '5' ? styles.active : null}`} onClick={this.setDataset.bind(this, '5')}>
                   <img src={dataset2} />
                 </a>
 
-                <a href="javascript:void(0);" className={`${kui.button} ${styles.datasetSelect} ${this.state.datasetName == '6' ? styles.active : null}`} onClick={this.setDataset.bind(this, '6')}>
+                <a title={this.getDatasetDescription('6')} href="javascript:void(0);" className={`${kui.button} ${styles.datasetSelect} ${this.state.datasetName == '6' ? styles.active : null}`} onClick={this.setDataset.bind(this, '6')}>
                   <img src={dataset3} />
                 </a>
               </div>
@@ -225,22 +230,53 @@ export default class App extends Component {
               </div>
             </div>
 
-            <div className={`${kui.row}`}>
+            <div className={`${kui.row} ${styles.description}`}>
               <div className={`${kui.twelve} ${kui.columns}`}>
-                <h3>What is Juggernaut?</h3>
+                <h4>What?</h4>
                 <p>
-                  Juggernaut is a Neural Network library.
+                  Juggernaut is a Neural Network library written in <a href="https://www.rust-lang.org/" target="_blank">Rust</a>.
                 </p>
 
-                <h3>Source code</h3>
+                <h4>Why?</h4>
                 <p>
-                  The source code of this page and Juggernaut is available on Github.
+                  To see if it is possible to train a model without JavaScript on web browsers and of course, to have fun.
                 </p>
 
-                <h3>Creator</h3>
+                <h4>How?</h4>
                 <p>
-                  Afshin Mehrabani, a software developer.
+                  Juggernaut demo page uses WebAssembly to train and evaluate the neural network.
+                  In fact, I haven't written any piece of JavaScript code to train the network. What I do is compiling the Rust code to WebAssembly (aka wasm)
+                  and then creating a HTML5 WebWorker (say, a new thread) to execute the training and evaluation session.
+
+                  <br />
+
+                  This neural network has three layers. Two hidden layers with ReLU as the activation function and Softmax for the output layer with Cross Entropy error function.
+
                 </p>
+
+                <p>
+                  Juggernaut Demo page has a limited set of Tensorflow Playground but things are different behind the scene. 
+                  Juggernaut demo page uses WebAssembly to train and evaluate the neural network, whereas Tensorflow Playground uses JavaScript.
+                </p>
+
+                <h4>Creator</h4>
+                <div>
+
+                  <p>
+                  Afshin Mehrabani 
+
+                  <span className={styles.iconSet}>
+                    <a title="Afshin's blog" href="http://afshinm.name/" target="_blank"><i className="fa fa-globe" aria-hidden="true"></i></a>
+                    <a title="GitHub" href="https://github.com/afshinm" target="_blank"><i className="fa fa-github" aria-hidden="true"></i></a>
+                    <a title="Twitter" href="https://twitter.com/afshinmeh" target="_blank"><i className="fa fa-twitter" aria-hidden="true"></i></a>
+                  </span>
+                  </p>
+
+                  <p>
+                    The source code of <a href="https://github.com/afshinm/juggernaut-demo" target="_blank">this page</a> and <a href="https://github.com/afshinm/juggernaut" target="_blank">Juggernaut</a> are available on GitHub.
+                  </p>
+
+                </div>
               </div>
             </div>
             
