@@ -1,14 +1,15 @@
-# Juggernaut Iris
+# Juggernaut Demo
 
-Hello world with Juggernaut + Iris dataset
+Hello world with Juggernaut.
 
 ## Libraries
 
 Libraries that I have used to develop this project:
 
+ - React
  - D3js
  - Juggernaut
 
 ## License
 
-MIT
+GPLv3
