@@ -1,7 +1,8 @@
 <!doctype html>
 <html>
   <head>
-    <title>Juggernaut Iris</title>
+    <title>Juggernaut Demo</title>
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
     <style>
 #network text {
@@ -17,17 +18,18 @@
   #network .link {
     stroke: #999;
     stroke-opacity: .6;
-    stroke-dasharray: 10 2;
+    stroke-dasharray: 9 2;
+    stroke-dashoffset: 1;
   }
 
   #network.active .link {
-    animation: dash 5s linear forwards;
+    animation: dash 0.5s linear forwards;
     animation-iteration-count:infinite;
   }
 
   @keyframes dash {
     to {
-      stroke-dashoffset: -100;
+      stroke-dashoffset: -10;
     }
   }
     </style>

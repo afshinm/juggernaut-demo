@@ -7,6 +7,9 @@ module.exports = {
     'webpack-hot-middleware/client',
     './src/index'
   ],
+  externals:[{
+    xmlhttprequest: '{XMLHttpRequest:XMLHttpRequest}'
+  }],
   output: {
     path: path.join(__dirname, 'dist'),
     filename: 'bundle.js',
