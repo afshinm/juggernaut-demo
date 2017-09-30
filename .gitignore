@@ -4,3 +4,4 @@ node_modules
 /web/src/wasm/
 /data/build/
 /data/env
+/web/dist
