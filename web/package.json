@@ -1,16 +1,18 @@
 {
-  "name": "juggernaut-iris",
-  "version": "1.0.0",
+  "name": "juggernaut-demo",
+  "version": "0.1.0",
   "description": "A Neural Network with Juggernaut",
   "scripts": {
     "start": "node server.js",
     "lint": "eslint src"
   },
   "keywords": [
-    "juggernaut"
+    "juggernaut",
+    "neural-network",
+    "machine-learning"
   ],
   "author": "Afshin Mehrabani",
-  "license": "MIT",
+  "license": "GPLv3",
   "homepage": "http://juggernaut.rs",
   "devDependencies": {
     "babel-core": "^6.0.20",
