@@ -189,7 +189,7 @@ impl NN {
         js! {
             var fetch_callback = @{fetch_callback};
             var dataset_path = @{dataset_name};
-            fetch("/dataset/" + dataset_path + ".csv").then((res) => res.text()).then((dataset) => {
+            fetch("dataset/" + dataset_path + ".csv").then((res) => res.text()).then((dataset) => {
                 fetch_callback(dataset, @{epochs}, @{learning_rate});
             });
 

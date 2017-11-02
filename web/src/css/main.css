@@ -54,6 +54,7 @@ a.datasetSelect {
   height: inherit;
   line-height: normal;
   padding: 5px;
+  overflow: hidden;
 }
 
 .datasetSelect img {

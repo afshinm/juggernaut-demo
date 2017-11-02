@@ -42,7 +42,7 @@ export default class App extends Component {
       ready: false
     });
 
-    var worker = new Worker(`./loader.js`);
+    var worker = new Worker(`loader.js`);
     this.worker = worker;
     worker.onmessage = (message) => this.dispatchMessage(JSON.parse(message.data));
   }
@@ -66,7 +66,7 @@ export default class App extends Component {
       this.stopTraining();
     }
 
-    this.getDataset(`./dataset/${datasetName}.csv`).get(dataset => {
+    this.getDataset(`dataset/${datasetName}.csv`).get(dataset => {
       this.setState({
         dataset,
         datasetName
@@ -160,6 +160,8 @@ export default class App extends Component {
 
             <p>This page trains a model on your web browser using WebAssembly and visualises all the steps and data points of the training process.
               It uses <a href="http://juggernaut.rs" target="_blank">Juggernaut</a> to train the model and illustrates elements using <a href="http://d3js.org" target="_blank">D3</a>. Select a dataset and click on "Train" button to start.
+
+             <div className="addthis_inline_share_toolbox_b3tq"></div>
             </p>
 
             <div className={`${kui.row} ${styles.datasetWrapper}`}>
@@ -275,6 +277,8 @@ export default class App extends Component {
                   <p>
                     The source code of <a href="https://github.com/afshinm/juggernaut-demo" target="_blank">this page</a> and <a href="https://github.com/afshinm/juggernaut" target="_blank">Juggernaut</a> are available on GitHub.
                   </p>
+
+                  <div className="addthis_inline_share_toolbox_b3tq"></div>
 
                 </div>
               </div>
