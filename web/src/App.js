@@ -158,11 +158,18 @@ export default class App extends Component {
           <div className={`${kui.column} ${kui.animated} ${kui.fadeIn}`} style={{marginTop: '10%'}}>
             <h2>Juggernaut</h2>
 
-            <p>This page trains a model on your web browser using WebAssembly and visualises all the steps and data points of the training process.
-              It uses <a href="http://juggernaut.rs" target="_blank">Juggernaut</a> to train the model and illustrates elements using <a href="http://d3js.org" target="_blank">D3</a>. Select a dataset and click on "Train" button to start.
+            <p>This page trains a Neural Network model in your web browser using <a href='http://webassembly.org/' target='_blank'>WebAssembly</a> and visualises all the steps and data points of the training process.
+              It uses <a href="http://juggernaut.rs" target="_blank">Juggernaut</a> to train the model and illustrates elements using <a href="http://d3js.org" target="_blank">D3</a>. I have <i>not</i> used JavaScript to train the model. Everything is written in <a href='https://www.rust-lang.org/' target='_blank'>Rust</a>.
+
+            </p>
+
+            <p>
+              Select a dataset and click on "Train" button to start.
+            </p>
 
              <div className="addthis_inline_share_toolbox_b3tq"></div>
-            </p>
+
+             <br/>
 
             <div className={`${kui.row} ${styles.datasetWrapper}`}>
               <div className={`${kui.six} ${kui.columns}`}>
@@ -236,7 +243,7 @@ export default class App extends Component {
               <div className={`${kui.twelve} ${kui.columns}`}>
                 <h4>What?</h4>
                 <p>
-                  Juggernaut is a Neural Network library written in <a href="https://www.rust-lang.org/" target="_blank">Rust</a>.
+                  <a href='http://juggernaut.rs/' target='_blank'>Juggernaut</a> is a <a href='https://en.wikipedia.org/wiki/Artificial_neural_network' target='_blank'>Neural Network</a> library written in <a href="https://www.rust-lang.org/" target="_blank">Rust</a>.
                 </p>
 
                 <h4>Why?</h4>
@@ -257,7 +264,7 @@ export default class App extends Component {
                 </p>
 
                 <p>
-                  Juggernaut Demo page has a limited set of Tensorflow Playground but things are different behind the scene. 
+                  Juggernaut Demo page has a limited set of <a href='http://playground.tensorflow.org/' target='_blank'>Tensorflow Playground</a> but things are different behind the scene. 
                   Juggernaut demo page uses WebAssembly to train and evaluate the neural network, whereas Tensorflow Playground uses JavaScript.
                 </p>
 
